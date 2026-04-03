@@ -34,7 +34,7 @@ The main research question of this analysis is how do personal and job factors c
 
 
 #Data Description and Processing
-The dataset used in this analysis was come from Kaggle[1]. We categorized the variables in the dataset as personal  and job based. Knowing how these different factors affect possible job salaries is of major interest to both employers and applicants to gauge the market.
+The dataset used in this analysis was come from Kaggle[1]. We categorized the variables in the dataset as personal and job based. Knowing how these different factors affect possible job salaries is of major interest to both employers and applicants to gauge the market.
 
 
 Personal Variables: \
