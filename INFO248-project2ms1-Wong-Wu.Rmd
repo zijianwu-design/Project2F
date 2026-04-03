@@ -11,18 +11,20 @@ editor_options:
     wrap: 72
 ---
 
-```{r, echo=FALSE, message=FALSE}
-# Install these libraries if necessary (run in Console, not here)
-library(knitr)
-library(caret)
-library(rpart)
-library(pROC)
-library(ggplot2)
-library(rattle)
-library(randomForest)
-# reproducibility
-rand.v = "4.3.2"
-seed.val = 123456
+```{r echo=FALSE, include=FALSE, message=FALSE}
+library(caret) # for training and cross validation
+library(knitr) # for kable table rendering
+library (tidyverse) # tibble
+library(ggplot2) # plotting
+library(car) # for VIF
+# two libraries for applying robust std errors:
+library(lmtest) # for Breusch-Pagan test
+library(sandwich)
+library(modelsummary)
+
+# params for random generator
+r.version <- "4.3.2"
+seed.val <- 1234
 ```
 
 # Overview
@@ -52,7 +54,6 @@ The dataset was check for missing values. Of the original 250,000 observations, 
 
 
 
-
 ```{r}
 js.df<- read.csv("job_salary_prediction_dataset.csv")
 sum(is.na(js.df))
@@ -61,6 +62,18 @@ sum(is.na(js.df))
 
 # Data Exploration 
 
+
+#Modeling
+##Model 1 
+
+We fitted a linear regression model using all the predictors, with salary as the predicted variable.The estimates for the coefficients, standard errors and significance results are displayed below:
+```{r echo=FALSE}
+fit1 <- lm(salary~ .,data=js.df)
+fit1.summary<- summary(fit1)
+coef.vals <- coef(fit1.summary)
+kable(coef.vals, caption="Summary of coefficients for model 1.")
+vif1<- vif(fit1)
+```
 
 
 
