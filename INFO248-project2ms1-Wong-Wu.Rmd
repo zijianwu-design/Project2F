@@ -28,6 +28,14 @@ seed.val = 123456
 # Overview
 
 #Data Description and Processing
+Job title: 
+Experience years:
+Education level:
+Skills count: 
+Industry:
+
+
+
 
 
 
