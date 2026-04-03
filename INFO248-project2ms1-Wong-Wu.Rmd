@@ -2,4 +2,8 @@
 title: "INFO248-project2ms1-Wong-Wu"
 output: html_document
 ---
+<<<<<<< HEAD
 hi
+=======
+
+>>>>>>> 164a530fd45ec105d06fba995c07c0ef62e86e6b
