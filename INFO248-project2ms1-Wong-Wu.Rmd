@@ -2,7 +2,8 @@
 title: "INFO248-project2ms1-Wong-Wu"
 author: "Zijian Wu & Adrian Wong"
 date: "04/03/2026"
-output: html_document:
+output:
+  html_document:
     df_print: paged
   pdf_document:
     number_sections: true
@@ -117,25 +118,4 @@ vif1<- vif(fit1)
 
 
 ##model 2
-
-```{r}
-RNGversion(rand.v)
-set.seed(seed.val)
-index.train <- createDataPartition(y = js.df$salary, p = 0.75, list = FALSE)
-train.data <- js.df[index.train,]
-test.data <- js.df[-index.train,]
-```
-
-
-```{r}
-reg.train.control <- rpart.control(minsplit = 20, cp = 0.01, xval = 10, maxdepth = 30)
-
-RNGversion(rand.v)
-set.seed(seed.val)
-
-reg.tree <- rpart(salary ~ .,	method="anova", data=train.data, control = reg.train.control)
-```
-
-
-
 
