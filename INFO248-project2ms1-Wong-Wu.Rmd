@@ -29,7 +29,6 @@ library(pROC) # roc plot
 library(ggplot2)
 library(rattle) #for fancyRpartPlot
 library(randomForest)
-library(ranger)
 # for fixing the random generator version and seed
 rand.v = "4.3.2"
 seed.val = 123456
@@ -118,8 +117,10 @@ vif1<- vif(fit1)
 
 
 
-##model 2
+##model 2 
 ```{r}
+#planning on using random forest, but not done
+
 RNGversion(rand.v)
 set.seed(seed.val)
 
@@ -131,5 +132,6 @@ test.data <- js.df[-index.train,]
 ```{r}
 RNGversion(rand.v)
 set.seed(seed.val)
-salary.df<-randomForest(salary ~., data=train.data, mtry=3, importance=TRUE)
+small.sample <- train.data[sample(nrow(train.data), nrow(train.data) * 0.1), ]
+salary.df<-randomForest(salary ~., data=small.sample, mtry=3, importance=TRUE)
 ```
