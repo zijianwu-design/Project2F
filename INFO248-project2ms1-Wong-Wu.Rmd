@@ -35,7 +35,6 @@ seed.val = 123456
 
 # Overview
 
-
 The main research question of this analysis is how do personal and job factors contribute to a the predicted salary of a job?
 
 
