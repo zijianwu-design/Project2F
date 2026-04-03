@@ -33,6 +33,11 @@ Experience years:
 Education level:
 Skills count: 
 Industry:
+Company size: 
+Location:
+Remote Work:
+Certifications 
+Salary: 
 
 
 
