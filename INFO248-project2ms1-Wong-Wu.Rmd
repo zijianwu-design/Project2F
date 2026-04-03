@@ -27,17 +27,19 @@ seed.val = 123456
 
 # Overview
 #Data Description and Processing
-The dataset used in this analysis was come from Kaggle. We categorized the variables in the dataset as personal strength and platform 
+The dataset used in this analysis was come from Kaggle. We categorized the variables in the dataset as personal  and job based. Knowing how these different factors affect possible job salaries is of major interest to both employers and applicants to gauge the market.
 
-Personal Strength Variables: 
-Job title: The job role or position (e.g.Data Analyst, AI engineer)
+The main research question of this analysis is how do personal and job factors contribute to a the predicted salary of a job?
+
+Personal Variables: \
 Experience years:Number of years of professional experience 
 Education level:Highest level of education completed 
 Skills count: Number of technical or professional skills 
 Certifications Number of professional certifications
 
 
-Platform Variables:
+Job Variables:\
+Job title: The job role or position (e.g.Data Analyst, AI engineer)
 Industry: Industry sector where the job belongs 
 Company size: Size of the company (small, medium, large)
 Location:Job location or region 
