@@ -20,7 +20,6 @@ library(pROC)
 library(ggplot2)
 library(rattle)
 library(randomForest)
-
 # reproducibility
 rand.v = "4.3.2"
 seed.val = 123456
