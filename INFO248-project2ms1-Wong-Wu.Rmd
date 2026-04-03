@@ -1,9 +1,8 @@
 ---
 title: "INFO248-project2ms1-Wong-Wu"
 author: "Zijian Wu & Adrian Wong"
-date: "03/30/2026"
-output:
-  html_document:
+date: "04/03/2026"
+output: html_document:
     df_print: paged
   pdf_document:
     number_sections: true
@@ -11,3 +10,17 @@ editor_options:
   markdown: 
     wrap: 72
 ---
+
+```{r, echo=FALSE, message=FALSE}
+# Install these libraries if necessary (run in Console, not here)
+library(knitr) # for kable
+library(caret) # creating test and training sets
+library(rpart) # regression and classification trees
+library(pROC) # roc plot
+library(ggplot2)
+library(rattle) # fancy trees
+library(randomForest)
+
+# reproducibility
+rand.v = "4.3.2"
+seed.val = 123456
