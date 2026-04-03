@@ -84,7 +84,26 @@ hist(js.df$salary/1000000, freq = FALSE, # freq = FALSE for density scale on y-a
 lines(density(js.df$salary/1000000), col = "blue", lwd = 2)
 ```
 
+Since the median is lower than the mean, the data is slightly right-skewed.
+
+```{r echo=FALSE}
+# table of descriptive stats for the performance index scores
+statistic <- c("Min", "Mean","Median", "Max", "StdDev")
+data<-js.df$salary
+quantiles<-quantile(data)
+# extracting the number with as.numeric because quantiles[2] is a named number.
+mn<-min(data)
+mx<-max(data)
+avg<-round(mean(data), 2)
+md<-median(data)
+std<-round(sd(data), 2)
+value <- c(mn,avg,md,mx,std)
+st.tbl <- cbind(statistic, value)
+kable(st.tbl, caption="Table 1) Salary descriptive statistics")
+```
+
 #Modeling
+
 ##Model 1 
 
 We fitted a linear regression model using all the predictors, with salary as the predicted variable.The estimates for the coefficients, standard errors and significance results are displayed below:
