@@ -28,10 +28,14 @@ seed.val <- 1234
 ```
 
 # Overview
+
+
+The main research question of this analysis is how do personal and job factors contribute to a the predicted salary of a job?
+
+
 #Data Description and Processing
 The dataset used in this analysis was come from Kaggle[1]. We categorized the variables in the dataset as personal  and job based. Knowing how these different factors affect possible job salaries is of major interest to both employers and applicants to gauge the market.
 
-The main research question of this analysis is how do personal and job factors contribute to a the predicted salary of a job?
 
 Personal Variables: \
 Experience years:Number of years of professional experience. Numeric \
@@ -62,6 +66,17 @@ sum(is.na(js.df))
 
 # Data Exploration 
 
+In figure 1, the distribution of the outcome variable, salary, shows a mostly symmetrical shape that is mildly skewed to the right.
+
+```{r echo=FALSE, out.width="70%", out.height="35%", fig.align = 'center', fig.cap="Salary distribution."}
+hist(js.df$salary/1000000, freq = FALSE, # freq = FALSE for density scale on y-axis
+     main = "", # turn off the title as using the fig.cap
+     xlab = "Salary (in millions)",
+     ylab = "Density",
+     ylim = c(0, 11)
+     )
+lines(density(js.df$salary/1000000), col = "blue", lwd = 2)
+```
 
 #Modeling
 ##Model 1 
