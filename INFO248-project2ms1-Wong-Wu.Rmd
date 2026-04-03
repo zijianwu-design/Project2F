@@ -1,9 +1,13 @@
 ---
 title: "INFO248-project2ms1-Wong-Wu"
-output: html_document
+author: "Zijian Wu & Adrian Wong"
+date: "03/30/2026"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    number_sections: true
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
-<<<<<<< HEAD
-hi
-=======
-
->>>>>>> 164a530fd45ec105d06fba995c07c0ef62e86e6b
