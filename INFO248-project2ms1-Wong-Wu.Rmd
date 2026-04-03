@@ -13,14 +13,14 @@ editor_options:
 
 ```{r, echo=FALSE, message=FALSE}
 # Install these libraries if necessary (run in Console, not here)
-library(knitr) # for kable
-library(caret) # creating test and training sets
-library(rpart) # regression and classification trees
-library(pROC) # roc plot
+library(knitr)
+library(caret)
+library(rpart)
+library(pROC)
 library(ggplot2)
-library(rattle) # fancy trees
+library(rattle)
 library(randomForest)
-
+#hello
 # reproducibility
 rand.v = "4.3.2"
 seed.val = 123456
