@@ -48,7 +48,7 @@ Remote Work:Whether the job allows remote work
 Outcome Variable: 
 Salary: Annual salary of the employee
 
-
+The dataset was check for missing values. Of the original 250,000 observations, we found 0 observation that contained missing value. 
 
 
 
