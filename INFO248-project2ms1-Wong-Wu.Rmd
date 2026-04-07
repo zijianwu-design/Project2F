@@ -3,8 +3,7 @@ title: "INFO248-project2ms1-Wong-Wu"
 author: "Zijian Wu & Adrian Wong"
 date: "04/03/2026"
 output:
-  html_document:
-    df_print: paged
+
   pdf_document:
     number_sections: true
 editor_options: 
