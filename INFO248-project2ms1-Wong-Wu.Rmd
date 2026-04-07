@@ -11,7 +11,7 @@ editor_options:
   markdown: 
     wrap: 72
 ---
-
+x
 ```{r echo=FALSE, include=FALSE, message=FALSE}
 library(caret) # for training and cross validation
 library(knitr) # for kable table rendering
