@@ -29,6 +29,9 @@ library(ggplot2)
 library(rattle) #for fancyRpartPlot
 library(randomForest)
 # for fixing the random generator version and seed
+library(recipes)
+library(embed)
+library(tidymodels)
 rand.v = "4.3.2"
 seed.val = 123456
 ```
@@ -106,13 +109,45 @@ kable(st.tbl, caption="Table 1) Salary descriptive statistics")
 
 ##Model 1 
 
+```{r echo=false}
+js.df <- js.df %>%
+  mutate(continent = case_when(
+    location %in% c("India", "Singapore") ~ "Asia",
+    location %in% c("Australia") ~ "Oceania",
+    location %in% c("USA", "Canada") ~ "North America",
+    location %in% c("Germany", "Netherlands", "Sweden", "UK") ~ "Europe",
+    location == "Remote" ~ "Remote",
+    TRUE ~ "Other"
+  )) %>%
+  # Convert the new column to a factor
+  mutate(continent = as.factor(continent))
+```
+
+
 We fitted a linear regression model using all the predictors, with salary as the predicted variable.The estimates for the coefficients, standard errors and significance results are displayed below:
 ```{r echo=FALSE}
-fit1 <- lm(salary~ .,data=js.df)
-fit1.summary<- summary(fit1)
-coef.vals <- coef(fit1.summary)
-kable(coef.vals, caption="Summary of coefficients for model 1.")
-vif1<- vif(fit1)
+salary_recipe <- recipe(salary ~ ., data = train.data) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_lencode_glm(job_title, outcome = vars(salary)) %>%
+  step_lencode_glm(location, outcome = vars(salary)) %>%
+  step_lencode_glm(industry, outcome = vars(salary)) %>%
+  step_lencode_glm(education_level, outcome = vars(salary)) %>%
+  step_normalize(all_numeric_predictors())
+
+lm_spec <- linear_reg() %>% set_engine("lm")
+
+salary_wf <- workflow() %>%
+  add_recipe(salary_recipe) %>%
+  add_model(lm_spec)
+
+fit_lm <- fit(salary_wf, data = train.data)
+
+lm.pred <- predict(fit_lm, test.data) %>%
+  bind_cols(test.data)
+
+lm.rmse <- sqrt(mean((lm.pred$.pred - lm.pred$salary)^2))
+lm.rmse
 ```
 
 
