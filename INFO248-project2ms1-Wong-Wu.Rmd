@@ -136,6 +136,7 @@ set.seed(seed.val)
 small.sample <- train.data[sample(nrow(train.data), nrow(train.data) * 0.1), ]
 salary.df<-randomForest(salary ~., data=small.sample, mtry=3, importance=TRUE)
 ```
+```
 
 
 #References
