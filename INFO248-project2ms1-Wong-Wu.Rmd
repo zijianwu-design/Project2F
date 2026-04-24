@@ -102,6 +102,26 @@ st.tbl <- cbind(statistic, value)
 kable(st.tbl, caption="Table 1) Salary descriptive statistics")
 ```
 
+
+```{r echo=FALSE, out.width="70%", out.height="35%", fig.align = 'center', fig.cap="Experience Years."}
+hist(js.df$experience_years, freq = FALSE, # freq = FALSE for density scale on y-axis
+     main = "", # turn off the title as using the fig.cap
+     xlab = "Experience Years",
+     ylab = "Density",
+     )
+lines(density(js.df$experience_years), col = "blue", lwd = 2)
+```
+
+```{r echo=FALSE, out.width="70%", out.height="35%", fig.align = 'center', fig.cap="Skill Count."}
+hist(js.df$skills_count, freq = FALSE, # freq = FALSE for density scale on y-axis
+     main = "", # turn off the title as using the fig.cap
+     xlab = "Skill Count",
+     ylab = "Density",
+     )
+lines(density(js.df$skills_count), col = "blue", lwd = 2)
+```
+
+
 #Modeling
 
 ##Model 1 
@@ -116,25 +136,35 @@ vif1<- vif(fit1)
 ```
 
 
+```{r}
+fit2 <- lm(salary~ experience_years+education_level+skills_count+certifications,data=js.df)
+```
+
+```{r}
+fit3<- lm(salary~job_title+industry+company_size+location, data=js.df)
+summary(fit3)
+```
+
+
 
 #model 2 
 planning on using random forest, but not done
 
 ```{r echo=FALSE}
 
-RNGversion(rand.v)
-set.seed(seed.val)
+#RNGversion(rand.v)
+#set.seed(seed.val)
 
-index.train <- createDataPartition(y = js.df$salary, p = 0.75, list = FALSE)
-train.data <- js.df[index.train,]
-test.data <- js.df[-index.train,]
+#index.train <- createDataPartition(y = js.df$salary, p = 0.75, list = FALSE)
+#train.data <- js.df[index.train,]
+#test.data <- js.df[-index.train,]
 ```
 
 ```{r echo=FALSE}
-RNGversion(rand.v)
-set.seed(seed.val)
-small.sample <- train.data[sample(nrow(train.data), nrow(train.data) * 0.1), ]
-salary.df<-randomForest(salary ~., data=small.sample, mtry=3, importance=TRUE)
+#RNGversion(rand.v)
+#set.seed(seed.val)
+#small.sample <- train.data[sample(nrow(train.data), nrow(train.data) * 0.1), ]
+salary.df<-randomForest(salary ~., data=small.sample, mtry=3, importance=TRUE)'''
 ```
 ```
 
