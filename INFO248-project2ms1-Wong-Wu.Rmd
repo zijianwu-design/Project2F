@@ -3,12 +3,12 @@ title: "INFO248-project2ms1-Wong-Wu"
 author: "Zijian Wu & Adrian Wong"
 date: "04/03/2026"
 output:
-
   pdf_document:
     number_sections: true
 editor_options: 
   markdown: 
     wrap: 72
+  chunk_output_type: console
 ---
 
 ```{r echo=FALSE, include=FALSE, message=FALSE}
