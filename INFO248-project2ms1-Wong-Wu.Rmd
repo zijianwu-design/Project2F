@@ -29,9 +29,9 @@ library(ggplot2)
 library(rattle) #for fancyRpartPlot
 library(randomForest)
 # for fixing the random generator version and seed
-#library(recipes)
-#library(embed)
-#library(tidymodels)
+library(recipes)
+library(embed)
+library(tidymodels)
 rand.v = "4.3.2"
 seed.val = 123456
 ```
