@@ -106,12 +106,19 @@ kable(st.tbl, caption="Table 1) Salary descriptive statistics")
 ```
 
 
+
+
+
+
+The distribution of the histogram is a uniform distribution with a non-obvious outlier at the low end 
 ```{r echo=FALSE, out.width="70%", out.height="35%", fig.align = 'center', fig.cap="Experience Years."}
 hist(js.df$experience_years, 
      freq = FALSE, 
+     main = "Experience Year",
      yaxt = 'n', # Hide the default axis
      xlab = "Experience Year",
-     ylab = "Percentage (%)")
+     ylab = "Percentage (%)",
+     breaks = 20)
 
 # Create a custom axis that multiplies density by 100
 axis(2, at = seq(0, 0.1, by = 0.02), labels = seq(0, 10, by = 2))
@@ -121,63 +128,68 @@ lines(density(js.df$experience_years), col = "blue", lwd = 2)
 
 
 
-
-
-
-
-
+Since the distribution of the graph is uniform distribution, the mean and median are nearly the same with a 0.01 difference. 
 ```{r echo=FALSE}
-# 1. Create the frequency table
+# table of descriptive stats for the performance index scores
+statistic <- c("Min", "Mean","Median", "Max", "StdDev")
+data<-js.df$experience_years
+quantiles<-quantile(data)
+# extracting the number with as.numeric because quantiles[2] is a named number.
+mn<-min(data)
+mx<-max(data)
+avg<-round(mean(data), 2)
+md<-median(data)
+std<-round(sd(data), 2)
+value <- c(mn,avg,md,mx,std)
+st.tbl <- cbind(statistic, value)
+kable(st.tbl, caption="Table 1) Salary descriptive statistics")
+```
+
+
+
+The distributino of the Job Title is uniform distributed, nearly all of the job title has the similar percentage. 
+```{r echo=FALSE}
+# 1. Create a frequency table
+job_counts <- table(js.df$job_title)
+
+# 2. Convert to percentages
+job_percent <- prop.table(job_counts) * 100
+
+# 3. Sort (optional)
+job_percent <- sort(job_percent, decreasing = TRUE)
+
+# 4. Create the bar plot
+barplot(job_percent, 
+        main = "Job Title Distribution", 
+        ylab = "Frequency (%)",   # Labels the y-axis
+        col = "skyblue", 
+        las = 2, 
+        cex.names = 0.7)
+```
+
+
+
+Because the distribution is uniformed, the frequency and percentage are nearly identical
+```{r echo=FALSE}
+# 1. Get raw counts
 counts <- table(js.df$job_title)
 
-# 2. Convert counts to percentages
-# prop.table(counts) gives values like 0.25; * 100 makes it 25
-percent <- prop.table(counts) * 100
+# 2. Get percentages (rounded to 2 decimal places for neatness)
+percentages <- round(prop.table(counts) * 100, 2)
 
-# 3. Create the barplot
-barplot(percent, 
-        main = "Distribution of Categories (%)",
-        xlab = "Job Title",
-        ylab = "Percentage (%)",
-        col = "skyblue",
-        ylim = c(0, max(percent) + 5)) # Adds a little head room for labels
+# 3. Combine into a data frame
+job_summary <- data.frame(
+  Job_Level = names(counts),
+  Frequency = as.numeric(counts),
+  Percentage = as.numeric(percentages)
+)
+
+# 4. Sort by highest frequency
+job_summary <- job_summary[order(-job_summary$Frequency), ]
+
+# View the table
+print(job_summary)
 ```
-
-
-```{r echo=FALSE}
-# 1. Create the frequency table
-counts1 <- table(js.df$company_size)
-
-# 2. Convert counts to percentages
-# prop.table(counts) gives values like 0.25; * 100 makes it 25
-percent <- prop.table(counts1) * 100
-
-# 3. Create the barplot
-barplot(percent, 
-        main = "Distribution of Categories (%)",
-        xlab = "Company Size",
-        ylab = "Percentage (%)",
-        col = "skyblue",
-        ylim = c(0, max(percent) + 5)) # Adds a little head room for labels
-```
-
-```{r echo=FALSE}
-# 1. Create the frequency table
-counts2 <- table(js.df$certifications)
-
-# 2. Convert counts to percentages
-# prop.table(counts) gives values like 0.25; * 100 makes it 25
-percent <- prop.table(counts2) * 100
-
-# 3. Create the barplot
-barplot(percent, 
-        main = "Distribution of Categories (%)",
-        xlab = "# of Certifications",
-        ylab = "Percentage (%)",
-        col = "skyblue",
-        ylim = c(0, max(percent) + 5)) # Adds a little head room for labels
-```
-
 
 #Modeling
 
