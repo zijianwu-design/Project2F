@@ -146,6 +146,42 @@ kable(st.tbl, caption="Table 1) Salary descriptive statistics")
 ```
 
 
+According to the data, the mean salary for entry-level positions is approximately $30,000 less than that of experienced roles. This observation is based solely on years of experience and does not account for variables such as job title
+```{r echo=FALSE}
+# 1. Calculate and store the means
+mean_entry <- mean(js.df$salary[js.df$experience_years == 0], na.rm = TRUE)
+mean_exp   <- mean(js.df$salary[js.df$experience_years != 0], na.rm = TRUE)
+
+# 2. Create a data frame for the table
+comparison_table <- data.frame(
+  Experience_Level = c("Entry Level (0 Years)", "Experienced (1+ Years)"),
+  Average_Salary = c(mean_entry, mean_exp)
+)
+
+# 3. Generate the pretty table
+kable(comparison_table, 
+      col.names = c("Experience Group", "Mean Salary"),
+      digits = 2,
+      format.args = list(big.mark = ","),
+      caption = "Salary Comparison: Entry Level vs. Experienced")
+```
+
+
+
+The line plot demonstrates a positive correlation between years of experience and salary. This upward trend indicates that as professional experience increases, compensation levels tend to rise accordingly
+```{r echo=FALSE}
+# Calculate means using aggregate
+summary_base <- aggregate(salary ~ experience_years, data = js.df, mean)
+
+# Plot
+plot(summary_base$experience_years, summary_base$salary, 
+     type = "b", # "b" means both lines and points
+     col = "blue",
+     xlab = "Experience", ylab = "Salary",
+     main = "Salary Trend")
+```
+
+
 
 The distributino of the Job Title is uniform distributed, nearly all of the job title has the similar percentage. 
 ```{r echo=FALSE}
@@ -166,7 +202,6 @@ barplot(job_percent,
         las = 2, 
         cex.names = 0.7)
 ```
-
 
 
 Because the distribution is uniformed, the frequency and percentage are nearly identical
