@@ -102,11 +102,8 @@ md<-median(data)
 std<-round(sd(data), 2)
 value <- c(mn,avg,md,mx,std)
 st.tbl <- cbind(statistic, value)
-kable(st.tbl, caption="Table 1) Salary descriptive statistics")
+kable(st.tbl, caption="Salary descriptive statistics")
 ```
-
-
-
 
 
 
@@ -142,7 +139,7 @@ md<-median(data)
 std<-round(sd(data), 2)
 value <- c(mn,avg,md,mx,std)
 st.tbl <- cbind(statistic, value)
-kable(st.tbl, caption="Table 1) Salary descriptive statistics")
+kable(st.tbl, caption="Salary descriptive statistics")
 ```
 
 
@@ -223,7 +220,7 @@ job_summary <- data.frame(
 job_summary <- job_summary[order(-job_summary$Frequency), ]
 
 kable(job_summary, col.names = c("Job Title", "Frequency", "Percentage (%)"),
-      caption = "Table 2) Job title frequency and percentage.")
+      caption = "Table X) Job title frequency and percentage.")
 ```
 
 #Modeling
@@ -257,7 +254,7 @@ lm.engine   <- extract_fit_engine(mod1.fit)
 ```{r echo=FALSE}
 coef.vals <- coef(summary(lm.engine))
 kable(coef.vals, digits = 4,
-      caption = "Table X) Model 1 coefficient estimates, standard errors, and significance.")
+      caption = "Model 1 coefficient estimates, standard errors, and significance.")
 ```
 
 The target-encoded job title and location predictors ranked most important, each with a coefficient close to 1. This means that for every dollar increase in a category's average salary, the model predicts approximately one additional dollar in individual salary — confirming that the role and location are the most significant. Industry ranked near the bottom: the ten industry categories in this data encode to nearly identical average salaries, so the predictor contributes almost no salary signal to the model.
@@ -293,7 +290,7 @@ job.avg.tbl <- inspect.train.tbl %>%
   rename(`Job Title` = job_title)
 
 kable(job.avg.tbl,
-      caption = "Table X) Average actual salary, predicted salary, and encoded value by job title.")
+      caption = "Average actual salary, predicted salary, and encoded value by job title.")
 ```
 
 ```{r echo=FALSE}
@@ -309,7 +306,7 @@ loc.avg.tbl <- inspect.train.tbl %>%
   rename(Location = location)
 
 kable(loc.avg.tbl,
-      caption = "Table X) Average actual salary, predicted salary, and encoded value by location.")
+      caption = "Average actual salary, predicted salary, and encoded value by location.")
 ```
 
 ```{r echo=FALSE}
@@ -325,7 +322,7 @@ ind.avg.tbl <- inspect.train.tbl %>%
   rename(Industry = industry)
 
 kable(ind.avg.tbl,
-      caption = "Table X) Average actual salary, predicted salary, and encoded value by industry.")
+      caption = "Average actual salary, predicted salary, and encoded value by industry.")
 ```
 
 ### Evaluation of Model 1 Fit
@@ -336,7 +333,7 @@ We checked for multicollinearity among the predictors by calculating the varianc
 vif.res <- as.data.frame(vif(lm.engine))
 vif.res <- tibble::rownames_to_column(vif.res, var = "Predictor")
 kable(vif.res, digits = 2,
-      caption = "Table X) Generalized variance inflation factors (GVIF) for Model 1 predictors.")
+      caption = "Generalized variance inflation factors (GVIF) for Model 1 predictors.")
 ```
 
 All VIF values are small, indicating no meaningful multicollinearity among the predictors.
@@ -355,7 +352,7 @@ The residuals in figure X are evenly spread above and below zero across the fitt
 ```{r echo=FALSE}
 ct <- coeftest(lm.engine, vcov. = vcovHC(lm.engine, type = "HC3"))
 kable(ct[, 1:4], digits = 4,
-      caption = "Table X) Heteroskedasticity-robust (HC3) standard errors for Model 1.")
+      caption = "Heteroskedasticity-robust (HC3) standard errors for Model 1.")
 ```
 
 ```{r echo=FALSE}
@@ -365,7 +362,7 @@ degf <- as.numeric(bpt$parameter)
 pv   <- round(as.numeric(bpt$p.value), 4)
 bp.tbl <- tibble(bps, degf, pv)
 kable(bp.tbl, col.names = c("BP Statistic", "df", "p-value"),
-      caption = "Table X) Breusch-Pagan test results for Model 1.")
+      caption = "Breusch-Pagan test results for Model 1.")
 ```
 
 The significance levels of all predictors were unchanged after applying robust standard errors, and the Breusch-Pagan test returned a non-significant p-value. We found no evidence of heteroskedasticity and conclude that the model provides a valid basis for drawing inferences about the predictors' effects on salary.
@@ -393,7 +390,7 @@ imp.df <- imp.df[, c("Rank", "Predictor", "Importance")]
 
 kable(imp.df, row.names = FALSE,
       col.names = c("Rank", "Predictor", "% Increase in MSE"),
-      caption = "Table X) Predictor importance for Model 2 (random forest), ranked by percent increase in mean squared error.")
+      caption = "Predictor importance for Model 2 (random forest), ranked by percent increase in mean squared error.")
 ```
 
 ```{r echo=FALSE, out.width="70%", out.height="35%", fig.align='center', fig.cap="Predictor importance plot for Model 2 (random forest)."}
