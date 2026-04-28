@@ -33,7 +33,7 @@ library(recipes)
 library(embed)
 library(tidymodels)
 r.version <- "4.3.2"
-seed.val = 123456
+seed.val <- 123456
 ```
 
 # Overview
@@ -227,6 +227,13 @@ kable(job_summary, col.names = c("Job Title", "Frequency", "Percentage (%)"),
 \newpage
 #Modeling
 
+We fitted a target encoded linear regression model and random forest on all of the factors that contribute to a job's salary. 
+
+## Hypothesis
+
+We hypothesize that job-based factors, specifically job title and location, will be stronger predictors of salary than personal factors such as experience years and education level.
+
+
 ##Model 1 
 
 We fitted a linear regression model using all the predictors, with salary as the predicted variable.The estimates for the coefficients, standard errors and significance results are displayed below:
@@ -312,7 +319,7 @@ imp.tbl <- coef.tbl %>%
   select(Rank, Predictor, Coefficient)
 
 kable(imp.tbl,
-      caption = Predictors ranked by importance (absolute coefficient value) for Model 1.")
+      caption = "Predictors ranked by importance (absolute coefficient value) for Model 1.")
 ```
 
 The target-encoded job title and location predictors ranked most important, each with a coefficient close to 1. This means that for every dollar increase in a category's average salary, the model predicts approximately one additional dollar in individual salary — confirming that the role and location are the most significant. Industry ranked near the bottom: the ten industry categories in this data encode to nearly identical average salaries, so the predictor contributes almost no salary signal to the model.
@@ -407,9 +414,6 @@ par(mfrow = c(1, 1))
 
 The residuals vs. fitted plot shows a U-shaped curve rather than a random scatter around zero. The model tends to underpredict salaries at the low and high ends of the fitted range and slightly overpredict in the middle. This suggests the relationship between some predictors and salary is not purely linear. In particular, the effect of experience years on salary likely follows a curve, with larger gains at earlier career stages that level off over time. A linear model cannot capture this shape, so the pattern appears in the residuals. This is a known limitation of linear regression when predictor effects are non-linear, and it motivates the use of a more flexible model such as the random forest in Model 2.
 
-
-The residuals in figure X are evenly spread above and below zero across the fitted range with no obvious curvature, suggesting the linear assumption is reasonable. The Q-Q plot shows the residuals track the diagonal closely through the middle of the distribution, with only minor departures at the tails. We checked for heteroskedasticity as a precaution.
-
 ```{r echo=FALSE}
 ct <- coeftest(lm.engine, vcov. = vcovHC(lm.engine, type = "HC3"))
 kable(ct[, 1:4], digits = 4,
@@ -461,6 +465,113 @@ varImpPlot(salary.rf, type = 1, main = "")
 Location ranked as the most important predictor, then experience years and company size. Job title was fourth. This is somewhat different from Model 1, where job title and location were tied at the top through their target-encoded coefficients. In the random forest, experience years and company size were more important because the model can capture non-linear salary increases across experience levels and threshold effects between company size categories.
 
 Industry again ranked near the bottom, consistent with Model 1's finding that industry contributes very little salary signal in this data.
+
+### Model 2 Fit
+
+```{r echo=FALSE, results='asis'}
+rf.preds <- predict(salary.rf, newdata = test.data)
+rf.rmse  <- sqrt(mean((rf.preds - test.data$salary)^2))
+rf.mae   <- mean(abs(rf.preds - test.data$salary))
+cat(sprintf("Evaluated on the test set, the random forest produced a root mean squared error (RMSE) of $%s and a mean absolute error (MAE) of $%s.",
+            format(round(rf.rmse), big.mark = ","),
+            format(round(rf.mae),  big.mark = ",")))
+```
+
+
+```{r echo=FALSE, out.width="70%", out.height="35%", fig.align='center', fig.cap="Predicted vs. actual salary for Model 2 (random forest) on the test set."}
+plot(test.data$salary, rf.preds,
+     xlab = "Actual Salary",
+     ylab = "Predicted Salary",
+     pch  = 20, col = rgb(0, 0, 0, 0.05))
+abline(0, 1, col = "blue", lwd = 2)
+```
+
+The predicted vs. actual salary plot in figure X shows the predictions tracking closely along the diagonal, indicating the model is making accurate salary estimates across the full range of the outcome. There is slightly more spread at the higher salary values, suggesting the model has more difficulty predicting the largest salaries precisely.
+
+## Comparison of Models 1 and 2
+
+```{r echo=FALSE}
+# Collect test-set metrics for both models
+m1.preds <- predict(mod1.fit, new_data = test.data)$.pred
+m1.rmse  <- sqrt(mean((m1.preds - test.data$salary)^2))
+m1.mae   <- mean(abs(m1.preds - test.data$salary))
+
+comp.tbl <- data.frame(
+  Model = c("Model 1: Linear Regression", "Model 2: Random Forest"),
+  RMSE  = c(round(m1.rmse), round(rf.rmse)),
+  MAE   = c(round(m1.mae),  round(rf.mae))
+)
+kable(comp.tbl, col.names = c("Model", "RMSE", "MAE"),
+      caption = "Test-set prediction error comparison for Models 1 and 2.")
+```
+
+Model 1 has a lower RMSE than Model 2, which is somewhat surprising given that random forests are generally more flexible. The likely explanation is each predictor contributes independently to salary, which is exactly the structure linear regression is designed for. The target encoding in Model 1 also gave the linear model an efficient way to capture the salary signal in high-cardinality categoricals, leveling the playing field. The random forest, trained on only 10% of the available data due to computational constraints, did not have access to the full signal that the linear model used.
+
+Both models agree on the broad predictor story: location, job title, and company size are the dominant salary drivers, while industry contributes almost nothing. Experience years ranked higher in the random forest than in the linear model, suggesting there may be non-linear experience effects that the linear model partially misses.
+
+## Model Selection
+
+In the initial model, two predictors showed negligible contributions to salary prediction. Industry ranked last in importance with a coefficient near zero, and its encoded values fell within a narrow range across all ten categories. Remote work showed a similarly weak effect — the difference in average salary between hybrid and non-remote positions was under $40, and the fully remote premium was modest relative to other predictors. Both predictors were removed and the model was refit on the remaining eight predictors.
+
+```{r echo=FALSE}
+RNGversion(r.version)
+set.seed(seed.val)
+
+te.recipe2 <- recipe(salary ~ ., data = train.data) %>%
+  step_rm(industry, remote_work) %>%
+  step_unknown(all_nominal_predictors()) %>%
+  step_novel(all_nominal_predictors()) %>%
+  step_lencode_glm(job_title, outcome = vars(salary)) %>%
+  step_lencode_glm(location,  outcome = vars(salary))
+
+wf.te2   <- workflow() %>% add_recipe(te.recipe2) %>% add_model(mod1)
+mod2.fit <- fit(wf.te2, data = train.data)
+
+prepped.rec2 <- extract_recipe(mod2.fit)
+lm.engine2   <- extract_fit_engine(mod2.fit)
+```
+
+```{r echo=FALSE}
+coef.vals2 <- coef(summary(lm.engine2))
+kable(coef.vals2, digits = 4,
+      caption = "Revised Model 1 coefficient estimates, standard errors, and significance.")
+```
+
+```{r echo=FALSE}
+coef.tbl2 <- as.data.frame(coef.vals2)
+coef.tbl2$Predictor <- rownames(coef.tbl2)
+coef.tbl2 <- coef.tbl2[coef.tbl2$Predictor != "(Intercept)", ]
+
+coef.tbl2$Predictor <- gsub("education_levelDiploma",    "Education: Diploma vs. Bachelor",     coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("education_levelHigh School","Education: High School vs. Bachelor",  coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("education_levelMaster",     "Education: Master vs. Bachelor",       coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("education_levelPhD",        "Education: PhD vs. Bachelor",          coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("company_sizeLarge",         "Company Size: Large vs. Enterprise",   coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("company_sizeMedium",        "Company Size: Medium vs. Enterprise",  coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("company_sizeSmall",         "Company Size: Small vs. Enterprise",   coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("company_sizeStartup",       "Company Size: Startup vs. Enterprise", coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("experience_years",          "Experience Years",                     coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("skills_count",              "Skills Count",                         coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("certifications",            "Certifications",                       coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("^job_title$",               "Job Title (target encoded)",           coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("^location$",                "Location (target encoded)",            coef.tbl2$Predictor)
+
+imp.tbl2 <- coef.tbl2 %>%
+  arrange(desc(abs(Estimate))) %>%
+  mutate(Rank = row_number(), Coefficient = round(Estimate, 2)) %>%
+  select(Rank, Predictor, Coefficient)
+
+kable(imp.tbl2,
+      caption = "Predictors ranked by importance for the revised Model 1.")
+```
+
+The revised model produced an adjusted R-squared of 0.9635, compared to
+0.9633 in the original model, which is a negligible difference confirming that neither removed predictor was contributing meaningful predictive power.
+The test-set RMSE of 7,157 was effectively identical to the original model.
+
+The importance rankings were stable after removal: job title and location
+were still at the top, continuing to support the hypothesis that job-based
+factors are the most significant to salary. The coefficients for company size, education level, experience years, skills count, and certifications were all the same, indicating that industry and remote work were not masking or distorting any of the remaining predictors' effects.
 
 #References
 [1] https://www.kaggle.com/datasets/nalisha/job-salary-prediction-dataset
