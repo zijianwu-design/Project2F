@@ -259,6 +259,62 @@ kable(coef.vals, digits = 4,
       caption = "Model 1 coefficient estimates, standard errors, and significance.")
 ```
 
+```{r echo=FALSE, results='asis'}
+adjrsq <- summary(lm.engine)$adj.r.squared
+cat(sprintf("The adjusted R-squared for this model was %.4f, meaning the model explains approximately %.1f%% of the variance in salary.",
+            adjrsq, adjrsq * 100))
+```
+```{r echo=FALSE}
+overall.stats <- glance(extract_fit_engine(mod1.fit))
+
+f.tbl <- data.frame(
+  `F Statistic` = round(overall.stats$statistic, 2),
+  `Numerator df` = overall.stats$df,
+  `Denominator df` = overall.stats$df.residual,
+  `p-value` = format(overall.stats$p.value, scientific = TRUE, digits = 3),
+  check.names = FALSE
+)
+
+kable(f.tbl, caption = "Overall F-test results for Model 1.")
+```
+
+The F-test evaluates whether the model as a whole explains a statistically significant portion of the variation in salary. The result in Table X confirms that the predictors have a significant linear relationship with salary. Given the large sample size, this result is expected, with this many observations, even very small effects will produce a significant F-statistic. The adjusted R-squared of 0.9633 is therefore the more informative measure of practical model quality, indicating the model explains approximately 96.3% of the variance in salary.
+
+To compare the relative importance of each predictor, we ranked them by the absolute value of their coefficient, which reflects the magnitude of their effect on salary.
+
+```{r echo=FALSE}
+# Build importance table — exclude intercept
+coef.tbl <- as.data.frame(coef.vals)
+coef.tbl$Predictor <- rownames(coef.tbl)
+coef.tbl <- coef.tbl[coef.tbl$Predictor != "(Intercept)", ]
+
+# Clean up predictor labels for the report
+coef.tbl$Predictor <- gsub("education_levelDiploma",    "Education: Diploma vs. Bachelor",    coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("education_levelHigh School","Education: High School vs. Bachelor", coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("education_levelMaster",     "Education: Master vs. Bachelor",      coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("education_levelPhD",        "Education: PhD vs. Bachelor",         coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("company_sizeLarge",         "Company Size: Large vs. Enterprise",  coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("company_sizeMedium",        "Company Size: Medium vs. Enterprise", coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("company_sizeSmall",         "Company Size: Small vs. Enterprise",  coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("company_sizeStartup",       "Company Size: Startup vs. Enterprise",coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("remote_workNo",             "Remote Work: No vs. Hybrid",          coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("remote_workYes",            "Remote Work: Yes vs. Hybrid",         coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("experience_years",          "Experience Years",                    coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("skills_count",              "Skills Count",                        coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("certifications",            "Certifications",                      coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("^job_title$",               "Job Title (target encoded)",          coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("^location$",                "Location (target encoded)",           coef.tbl$Predictor)
+coef.tbl$Predictor <- gsub("^industry$",                "Industry (target encoded)",           coef.tbl$Predictor)
+
+imp.tbl <- coef.tbl %>%
+  arrange(desc(abs(Estimate))) %>%
+  mutate(Rank = row_number(), Coefficient = round(Estimate, 2)) %>%
+  select(Rank, Predictor, Coefficient)
+
+kable(imp.tbl,
+      caption = Predictors ranked by importance (absolute coefficient value) for Model 1.")
+```
+
 The target-encoded job title and location predictors ranked most important, each with a coefficient close to 1. This means that for every dollar increase in a category's average salary, the model predicts approximately one additional dollar in individual salary — confirming that the role and location are the most significant. Industry ranked near the bottom: the ten industry categories in this data encode to nearly identical average salaries, so the predictor contributes almost no salary signal to the model.
 
 Among the directly interpreted predictors, company size showed the largest effects. Employees at startups earned approximately \$42,000 less on average than those at enterprise-sized companies, holding all other factors constant. Small and medium companies showed similar but smaller gaps. Education level showed meaningful differences, with PhD holders earning roughly \$21,000 more than those with a bachelor's degree. Experience years, skills count, and certifications all had positive but more modest effects.
@@ -348,6 +404,9 @@ plot(lm.engine, which = 1)
 plot(lm.engine, which = 2)
 par(mfrow = c(1, 1))
 ```
+
+The residuals vs. fitted plot shows a U-shaped curve rather than a random scatter around zero. The model tends to underpredict salaries at the low and high ends of the fitted range and slightly overpredict in the middle. This suggests the relationship between some predictors and salary is not purely linear. In particular, the effect of experience years on salary likely follows a curve, with larger gains at earlier career stages that level off over time. A linear model cannot capture this shape, so the pattern appears in the residuals. This is a known limitation of linear regression when predictor effects are non-linear, and it motivates the use of a more flexible model such as the random forest in Model 2.
+
 
 The residuals in figure X are evenly spread above and below zero across the fitted range with no obvious curvature, suggesting the linear assumption is reasonable. The Q-Q plot shows the residuals track the diagonal closely through the middle of the distribution, with only minor departures at the tails. We checked for heteroskedasticity as a precaution.
 
