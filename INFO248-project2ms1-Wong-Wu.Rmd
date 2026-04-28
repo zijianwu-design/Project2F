@@ -166,7 +166,7 @@ kable(comparison_table,
 
 \newpage
 The line plot demonstrates a positive correlation between years of experience and salary. This upward trend indicates that as professional experience increases, compensation levels tend to rise accordingly
-```{r echo=FALSE fig.cap="Average salary by years of experience."}
+```{r echo=FALSE, fig.cap="Average salary by years of experience."}
 # Calculate means using aggregate
 summary_base <- aggregate(salary ~ experience_years, data = js.df, mean)
 
