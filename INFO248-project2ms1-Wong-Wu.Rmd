@@ -106,7 +106,7 @@ kable(st.tbl, caption="Salary descriptive statistics")
 ```
 
 
-
+\newpage
 The distribution of the histogram is a uniform distribution with a non-obvious outlier at the low end 
 ```{r echo=FALSE, out.width="70%", out.height="35%", fig.align = 'center', fig.cap="Experience Years."}
 hist(js.df$experience_years, 
@@ -164,7 +164,7 @@ kable(comparison_table,
 ```
 
 
-
+\newpage
 The line plot demonstrates a positive correlation between years of experience and salary. This upward trend indicates that as professional experience increases, compensation levels tend to rise accordingly
 ```{r echo=FALSE}
 # Calculate means using aggregate
@@ -179,8 +179,8 @@ plot(summary_base$experience_years, summary_base$salary,
 ```
 
 
-
-The distributino of the Job Title is uniform distributed, nearly all of the job title has the similar percentage. 
+\newpage
+The distribution of the Job Title is uniform distributed, nearly all of the job title has the similar percentage. 
 ```{r echo=FALSE}
 # 1. Create a frequency table
 job_counts <- table(js.df$job_title)
@@ -201,7 +201,7 @@ barplot(job_percent,
 ```
 
 
-Because the distribution is uniformed, the frequency and percentage are nearly identical
+Due to the uniform distribution of the data, the frequency and percentage for each category are nearly equal, with every job representing a consistent share of approximately 8%
 ```{r echo=FALSE}
 # 1. Get raw counts
 counts <- table(js.df$job_title)
@@ -220,9 +220,11 @@ job_summary <- data.frame(
 job_summary <- job_summary[order(-job_summary$Frequency), ]
 
 kable(job_summary, col.names = c("Job Title", "Frequency", "Percentage (%)"),
-      caption = "Table X) Job title frequency and percentage.")
+      caption = "Job title frequency and percentage.")
 ```
 
+
+\newpage
 #Modeling
 
 ##Model 1 
@@ -324,7 +326,7 @@ ind.avg.tbl <- inspect.train.tbl %>%
 kable(ind.avg.tbl,
       caption = "Average actual salary, predicted salary, and encoded value by industry.")
 ```
-
+\newpage
 ### Evaluation of Model 1 Fit
 
 We checked for multicollinearity among the predictors by calculating the variance inflation factor (VIF) for each.
