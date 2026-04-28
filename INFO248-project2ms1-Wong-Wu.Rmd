@@ -43,7 +43,7 @@ There are many factors that determine the salary of a job. There are aspects tha
 The main research question of this analysis is how do personal and job factors contribute to a the predicted salary of a job?
 
 
-#Data Description and Processing
+# Data Description and Processing
 The dataset used in this analysis was come from Kaggle[1]. We categorized the variables in the dataset as personal and job based. Knowing how these different factors affect possible job salaries is of major interest to both employers and applicants to gauge the market.
 
 
@@ -139,7 +139,7 @@ md<-median(data)
 std<-round(sd(data), 2)
 value <- c(mn,avg,md,mx,std)
 st.tbl <- cbind(statistic, value)
-kable(st.tbl, caption="Salary descriptive statistics")
+kable(st.tbl, caption="Experience descriptive statistics")
 ```
 
 
@@ -166,7 +166,7 @@ kable(comparison_table,
 
 \newpage
 The line plot demonstrates a positive correlation between years of experience and salary. This upward trend indicates that as professional experience increases, compensation levels tend to rise accordingly
-```{r echo=FALSE}
+```{r echo=FALSE fig.cap="Average salary by years of experience."}
 # Calculate means using aggregate
 summary_base <- aggregate(salary ~ experience_years, data = js.df, mean)
 
@@ -225,7 +225,7 @@ kable(job_summary, col.names = c("Job Title", "Frequency", "Percentage (%)"),
 
 
 \newpage
-#Modeling
+# Modeling
 
 We fitted a target encoded linear regression model and random forest on all of the factors that contribute to a job's salary. 
 
@@ -234,7 +234,7 @@ We fitted a target encoded linear regression model and random forest on all of t
 We hypothesize that job-based factors, specifically job title and location, will be stronger predictors of salary than personal factors such as experience years and education level.
 
 
-##Model 1 
+## Model 1 
 
 We fitted a linear regression model using all the predictors, with salary as the predicted variable.The estimates for the coefficients, standard errors and significance results are displayed below:
 ```{r echo=FALSE}
@@ -285,7 +285,7 @@ f.tbl <- data.frame(
 kable(f.tbl, caption = "Overall F-test results for Model 1.")
 ```
 
-The F-test evaluates whether the model as a whole explains a statistically significant portion of the variation in salary. The result in Table X confirms that the predictors have a significant linear relationship with salary. Given the large sample size, this result is expected, with this many observations, even very small effects will produce a significant F-statistic. The adjusted R-squared of 0.9633 is therefore the more informative measure of practical model quality, indicating the model explains approximately 96.3% of the variance in salary.
+The F-test evaluates whether the model as a whole explains a statistically significant portion of the variation in salary. The result in Table 6 confirms that the predictors have a significant linear relationship with salary. Given the large sample size, this result is expected, with this many observations, even very small effects will produce a significant F-statistic. The adjusted R-squared of 0.9633 is therefore the more informative measure of practical model quality, indicating the model explains approximately 96.3% of the variance in salary.
 
 To compare the relative importance of each predictor, we ranked them by the absolute value of their coefficient, which reflects the magnitude of their effect on salary.
 
@@ -325,6 +325,10 @@ kable(imp.tbl,
 The target-encoded job title and location predictors ranked most important, each with a coefficient close to 1. This means that for every dollar increase in a category's average salary, the model predicts approximately one additional dollar in individual salary — confirming that the role and location are the most significant. Industry ranked near the bottom: the ten industry categories in this data encode to nearly identical average salaries, so the predictor contributes almost no salary signal to the model.
 
 Among the directly interpreted predictors, company size showed the largest effects. Employees at startups earned approximately \$42,000 less on average than those at enterprise-sized companies, holding all other factors constant. Small and medium companies showed similar but smaller gaps. Education level showed meaningful differences, with PhD holders earning roughly \$21,000 more than those with a bachelor's degree. Experience years, skills count, and certifications all had positive but more modest effects.
+
+These results support the hypothesis — job title and location ranked as the 
+two most important predictors, confirming that job-based factors dominate 
+salary prediction in the linear model.
 
 The following tables show the average actual salary and average predicted salary for each level of the three target-encoded predictors. These allow the reader to interpret the encoded values in plain terms.
 
@@ -424,16 +428,17 @@ kable(ct[, 1:4], digits = 4,
 bpt <- bptest(lm.engine)
 bps  <- round(as.numeric(bpt$statistic), 4)
 degf <- as.numeric(bpt$parameter)
-pv   <- round(as.numeric(bpt$p.value), 4)
+pv <- ifelse(bpt$p.value < 0.0001, "< 0.0001", round(bpt$p.value, 4))
 bp.tbl <- tibble(bps, degf, pv)
 kable(bp.tbl, col.names = c("BP Statistic", "df", "p-value"),
       caption = "Breusch-Pagan test results for Model 1.")
 ```
 
-The significance levels of all predictors were unchanged after applying robust standard errors, and the Breusch-Pagan test returned a non-significant p-value. We found no evidence of heteroskedasticity and conclude that the model provides a valid basis for drawing inferences about the predictors' effects on salary.
+The Breusch-Pagan test returned a highly significant result, indicating the 
+presence of heteroskedasticity. However, after applying HC3 robust standard 
+errors, the significance levels of all predictors were unchanged, confirming that the coefficient estimates remain reliable despite the heteroskedasticity.
 
-#model 2 
-planning on using random forest, but not done
+## Model 2 
 
 ```{r echo=FALSE}
 RNGversion(r.version)
@@ -458,13 +463,24 @@ kable(imp.df, row.names = FALSE,
       caption = "Predictor importance for Model 2 (random forest), ranked by percent increase in mean squared error.")
 ```
 
+These results partially contradict the hypothesis. While location and job 
+title remain meaningful predictors, experience years, company size, and 
+education level all ranked above them, suggesting personal factors carry 
+more salary signal than predicted when non-linear effects are accounted for.
+
 ```{r echo=FALSE, out.width="70%", out.height="35%", fig.align='center', fig.cap="Predictor importance plot for Model 2 (random forest)."}
 varImpPlot(salary.rf, type = 1, main = "")
 ```
 
-Location ranked as the most important predictor, then experience years and company size. Job title was fourth. This is somewhat different from Model 1, where job title and location were tied at the top through their target-encoded coefficients. In the random forest, experience years and company size were more important because the model can capture non-linear salary increases across experience levels and threshold effects between company size categories.
+Experience years ranked as the most important predictor, followed by company 
+size and education level. Location came fourth and job title fifth. This 
+differs from Model 1, where job title and location ranked highest through 
+their target-encoded coefficients. The random forest ranks personal factors 
+more highly because it can capture non-linear salary increases across 
+experience levels and differences between education tiers that a linear model can only partially represent.
 
-Industry again ranked near the bottom, consistent with Model 1's finding that industry contributes very little salary signal in this data.
+Industry ranked last with a negative importance value of -0.08, meaning 
+removing it from the model would not meaningfully change prediction accuracy. This is consistent with Model 1's finding that industry contributes almost no salary signal in this data.
 
 ### Model 2 Fit
 
@@ -472,7 +488,7 @@ Industry again ranked near the bottom, consistent with Model 1's finding that in
 rf.preds <- predict(salary.rf, newdata = test.data)
 rf.rmse  <- sqrt(mean((rf.preds - test.data$salary)^2))
 rf.mae   <- mean(abs(rf.preds - test.data$salary))
-cat(sprintf("Evaluated on the test set, the random forest produced a root mean squared error (RMSE) of $%s and a mean absolute error (MAE) of $%s.",
+cat(sprintf("Evaluated on the test set, the random forest produced a root mean squared error (RMSE) of %s and a mean absolute error (MAE) of %s.",
             format(round(rf.rmse), big.mark = ","),
             format(round(rf.mae),  big.mark = ",")))
 ```
@@ -486,7 +502,7 @@ plot(test.data$salary, rf.preds,
 abline(0, 1, col = "blue", lwd = 2)
 ```
 
-The predicted vs. actual salary plot in figure X shows the predictions tracking closely along the diagonal, indicating the model is making accurate salary estimates across the full range of the outcome. There is slightly more spread at the higher salary values, suggesting the model has more difficulty predicting the largest salaries precisely.
+The predicted vs. actual salary plot in figure 5 shows the predictions tracking closely along the diagonal, indicating the model is making accurate salary estimates across the full range of the outcome. There is slightly more spread at the higher salary values, suggesting the model has more difficulty predicting the largest salaries precisely.
 
 ## Comparison of Models 1 and 2
 
@@ -507,7 +523,8 @@ kable(comp.tbl, col.names = c("Model", "RMSE", "MAE"),
 
 Model 1 has a lower RMSE than Model 2, which is somewhat surprising given that random forests are generally more flexible. The likely explanation is each predictor contributes independently to salary, which is exactly the structure linear regression is designed for. The target encoding in Model 1 also gave the linear model an efficient way to capture the salary signal in high-cardinality categoricals, leveling the playing field. The random forest, trained on only 10% of the available data due to computational constraints, did not have access to the full signal that the linear model used.
 
-Both models agree on the broad predictor story: location, job title, and company size are the dominant salary drivers, while industry contributes almost nothing. Experience years ranked higher in the random forest than in the linear model, suggesting there may be non-linear experience effects that the linear model partially misses.
+Both models agree that industry contributes almost no salary signal. Beyond 
+that, the models tell a somewhat different story. The linear regression ranked job title and location highest, while the random forest ranked experience years and company size above them. This suggests that the salary effect of experience and education is non-linear — patterns the linear model can only partially capture, but which the random forest detects more clearly.
 
 ## Model Selection
 
@@ -573,5 +590,5 @@ The importance rankings were stable after removal: job title and location
 were still at the top, continuing to support the hypothesis that job-based
 factors are the most significant to salary. The coefficients for company size, education level, experience years, skills count, and certifications were all the same, indicating that industry and remote work were not masking or distorting any of the remaining predictors' effects.
 
-#References
+# References
 [1] https://www.kaggle.com/datasets/nalisha/job-salary-prediction-dataset
