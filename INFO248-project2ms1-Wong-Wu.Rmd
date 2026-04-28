@@ -50,15 +50,15 @@ The dataset used in this analysis was come from Kaggle[1]. We categorized the va
 Personal Variables: \
 Experience years:Number of years of professional experience. Numeric \
 Education level:Highest level of education completed. Categorical \
-Skills count: Number of technical or professional skills. Numeric \ 
-Certifications Number of professional certifications. Numeric \
+Skills count: Number of technical or professional skills. Numeric \
+Certifications: Number of professional certifications. Numeric \
 
 
 Job Variables:\
 Job title: The job role or position (e.g.Data Analyst, AI engineer). Categorical \
 Industry: Industry sector where the job belongs. Categorical \
 Company size: Size of the company (small, medium, large). Categorical \
-Location:Job location or region. Categorical \
+Location: Job location or region. Categorical \
 Remote Work:Whether the job allows remote work. Categorical \
 
 Outcome Variable: 
@@ -166,7 +166,8 @@ kable(comparison_table,
 
 \newpage
 The line plot demonstrates a positive correlation between years of experience and salary. This upward trend indicates that as professional experience increases, compensation levels tend to rise accordingly
-```{r echo=FALSE, fig.cap="Average salary by years of experience."}
+
+```{r echo=FALSE, out.width="70%", out.height="35%", fig.align='center', fig.cap="Average salary by years of experience."}
 # Calculate means using aggregate
 summary_base <- aggregate(salary ~ experience_years, data = js.df, mean)
 
@@ -174,8 +175,7 @@ summary_base <- aggregate(salary ~ experience_years, data = js.df, mean)
 plot(summary_base$experience_years, summary_base$salary, 
      type = "b", # "b" means both lines and points
      col = "blue",
-     xlab = "Experience", ylab = "Salary",
-     main = "Salary Trend")
+     xlab = "Experience", ylab = "Salary")
 ```
 
 
@@ -322,13 +322,8 @@ kable(imp.tbl,
       caption = "Predictors ranked by importance (absolute coefficient value) for Model 1.")
 ```
 
-The target-encoded job title and location predictors ranked most important, each with a coefficient close to 1. This means that for every dollar increase in a category's average salary, the model predicts approximately one additional dollar in individual salary — confirming that the role and location are the most significant. Industry ranked near the bottom: the ten industry categories in this data encode to nearly identical average salaries, so the predictor contributes almost no salary signal to the model.
-
-Among the directly interpreted predictors, company size showed the largest effects. Employees at startups earned approximately \$42,000 less on average than those at enterprise-sized companies, holding all other factors constant. Small and medium companies showed similar but smaller gaps. Education level showed meaningful differences, with PhD holders earning roughly \$21,000 more than those with a bachelor's degree. Experience years, skills count, and certifications all had positive but more modest effects.
-
-These results support the hypothesis — job title and location ranked as the 
-two most important predictors, confirming that job-based factors dominate 
-salary prediction in the linear model.
+Company size showed the largest coefficients in the model, with startup 
+employees earning approximately 42,000 less than those at enterprise companies. Job title and location, though ranked lowest by coefficient magnitude, are not directly comparable to the dummy-coded predictors — their coefficients near 1.0 reflect the target encoding scale rather than raw salary impact.The hypothesis is better evaluated through the encoded value tables, which show a 53,000 salary range across job titles and an $84,000 range across locations — larger spreads than any other predictor.
 
 The following tables show the average actual salary and average predicted salary for each level of the three target-encoded predictors. These allow the reader to interpret the encoded values in plain terms.
 
@@ -472,12 +467,9 @@ more salary signal than predicted when non-linear effects are accounted for.
 varImpPlot(salary.rf, type = 1, main = "")
 ```
 
-Experience years ranked as the most important predictor, followed by company 
-size and education level. Location came fourth and job title fifth. This 
-differs from Model 1, where job title and location ranked highest through 
-their target-encoded coefficients. The random forest ranks personal factors 
-more highly because it can capture non-linear salary increases across 
-experience levels and differences between education tiers that a linear model can only partially represent.
+This differs from Model 1, where the encoded value tables showed a $53,000 
+salary range across job titles and an $84,000 range across locations, 
+suggesting strong job-based salary signals despite their low coefficient ranks.
 
 Industry ranked last with a negative importance value of -0.08, meaning 
 removing it from the model would not meaningfully change prediction accuracy. This is consistent with Model 1's finding that industry contributes almost no salary signal in this data.
@@ -502,7 +494,7 @@ plot(test.data$salary, rf.preds,
 abline(0, 1, col = "blue", lwd = 2)
 ```
 
-The predicted vs. actual salary plot in figure 5 shows the predictions tracking closely along the diagonal, indicating the model is making accurate salary estimates across the full range of the outcome. There is slightly more spread at the higher salary values, suggesting the model has more difficulty predicting the largest salaries precisely.
+The predicted vs. actual salary plot in figure 6 shows the predictions tracking closely along the diagonal, indicating the model is making accurate salary estimates across the full range of the outcome. There is slightly more spread at the higher salary values, suggesting the model has more difficulty predicting the largest salaries precisely.
 
 ## Comparison of Models 1 and 2
 
@@ -524,7 +516,7 @@ kable(comp.tbl, col.names = c("Model", "RMSE", "MAE"),
 Model 1 has a lower RMSE than Model 2, which is somewhat surprising given that random forests are generally more flexible. The likely explanation is each predictor contributes independently to salary, which is exactly the structure linear regression is designed for. The target encoding in Model 1 also gave the linear model an efficient way to capture the salary signal in high-cardinality categoricals, leveling the playing field. The random forest, trained on only 10% of the available data due to computational constraints, did not have access to the full signal that the linear model used.
 
 Both models agree that industry contributes almost no salary signal. Beyond 
-that, the models tell a somewhat different story. The linear regression ranked job title and location highest, while the random forest ranked experience years and company size above them. This suggests that the salary effect of experience and education is non-linear — patterns the linear model can only partially capture, but which the random forest detects more clearly.
+that, the models tell a somewhat different story. The linear regression showed the largest coefficient effects for company size and education level, while the encoded value tables revealed the broadest salary ranges for job title and location.
 
 ## Model Selection
 
@@ -553,6 +545,8 @@ coef.vals2 <- coef(summary(lm.engine2))
 kable(coef.vals2, digits = 4,
       caption = "Revised Model 1 coefficient estimates, standard errors, and significance.")
 ```
+
+\newpage
 
 ```{r echo=FALSE}
 coef.tbl2 <- as.data.frame(coef.vals2)
@@ -586,9 +580,10 @@ The revised model produced an adjusted R-squared of 0.9635, compared to
 0.9633 in the original model, which is a negligible difference confirming that neither removed predictor was contributing meaningful predictive power.
 The test-set RMSE of 7,157 was effectively identical to the original model.
 
-The importance rankings were stable after removal: job title and location
-were still at the top, continuing to support the hypothesis that job-based
-factors are the most significant to salary. The coefficients for company size, education level, experience years, skills count, and certifications were all the same, indicating that industry and remote work were not masking or distorting any of the remaining predictors' effects.
+The importance rankings were stable after removal. The same predictors that
+dominated in the original model continued to show the largest effects, and 
+the encoded value ranges for job title and location remained unchanged, 
+continuing to support the hypothesis that job-based factors carry significant salary signal.
 
 # References
 [1] https://www.kaggle.com/datasets/nalisha/job-salary-prediction-dataset
