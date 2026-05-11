@@ -107,66 +107,40 @@ kable(st.tbl, caption="Salary descriptive statistics")
 
 
 The distribution of the histogram is a uniform distribution with a non-obvious outlier at the low end 
-```{r echo=FALSE, out.width="65%", out.height="28%", fig.align = 'center', fig.cap="Years of Experience"}
+```{r echo=FALSE, out.width="65%", out.height="28%", fig.align = 'center', fig.cap="Years of Experience and Percentage"}
+exp_bins <- cut(js.df$experience_years, breaks = seq(0, 20, by = 2), include.lowest = TRUE)
+exp_counts <- table(exp_bins)
+exp_percent <- round(prop.table(exp_counts) * 100, 2)
 
-hist(js.df$experience_years, 
-     freq = FALSE, 
-     yaxt = 'n',
-     main = "",
-     xlab = "Years of Experience",
-     ylab = "Percentage (%)",
-     breaks = 20)
-
-axis(2, at = seq(0, 0.1, by = 0.02), labels = seq(0, 10, by = 2))
-lines(density(js.df$experience_years), col = "blue", lwd = 2)
+par(mar = c(6, 4, 2, 1))
+barplot(exp_percent,
+        main = "",
+        xlab = "Years of Experience",
+        ylab = "Percentage (%)",
+        col = "skyblue",
+        las = 1,
+        names.arg = c("0-2","2-4","4-6","6-8","8-10","10-12","12-14","14-16","16-18","18-20"),
+        cex.names = 0.8,
+        cex.axis = 0.8)
 ```
 
+\newpage
 
-
-
-Since the distribution of the graph is uniform distribution, the mean and median are nearly the same with a 0.01 difference. 
+The table below illustrates the frequency and percentage of each year of experience.
 ```{r echo=FALSE}
-# table of descriptive stats for the performance index scores
-statistic <- c("Min", "Mean","Median", "Max", "StdDev")
-data<-js.df$experience_years
-quantiles<-quantile(data)
-# extracting the number with as.numeric because quantiles[2] is a named number.
-mn<-min(data)
-mx<-max(data)
-avg<-round(mean(data), 2)
-md<-median(data)
-std<-round(sd(data), 2)
-value <- c(mn,avg,md,mx,std)
-st.tbl <- cbind(statistic, value)
-kable(st.tbl, caption="Experience descriptive statistics")
-```
+exp_bins <- cut(js.df$experience_years, breaks = seq(0, 20, by = 2), include.lowest = TRUE)
+exp_counts <- table(exp_bins)
+exp_percent <- round(prop.table(exp_counts) * 100, 2)
 
-The table below illustrates the frequency and percentage of experience year. 
-```{r echo=FALSE, fig.cap="Years of Frequencies"}
-
-# 1. Generate the histogram object (without plotting it) 
-# using the exact same logic as your plot
-h <- hist(js.df$experience_years, breaks = 20, plot = FALSE)
-
-# 2. Extract the counts and calculate percentages
-# Note: Since your plot's Y-axis is density-based (0.1 = 10%), 
-# we calculate percentage relative to the total count.
-bin_counts <- h$counts
-bin_percentages <- round((bin_counts / sum(bin_counts)) * 100, 2)
-
-# 3. Create labels for the ranges (e.g., "0-1", "1-2")
-intervals <- paste0(head(h$breaks, -1), " - ", tail(h$breaks, -1))
-
-# 4. Combine into a summary table
-experience_summary <- data.frame(
-  Range = intervals,
-  Frequency = bin_counts,
-  Percentage = bin_percentages
+exp_summary <- data.frame(
+  Range = names(exp_counts),
+  Frequency = as.numeric(exp_counts),
+  Percentage = as.numeric(exp_percent)
 )
 
-kable(experience_summary, 
-      col.names = c("Experience Year Range", "Frequency", "Percentage (%)"),
-      caption = "Experience frequency and percentage (Binned).")
+kable(exp_summary,
+      col.names = c("Range of Experience", "Frequency", "Percentage (%)"),
+      caption = "Years of Experience, Frequency, and Percentage.")
 ```
 
 
@@ -611,6 +585,28 @@ The importance rankings were stable after removal. The same predictors that
 dominated in the original model continued to show the largest effects, and 
 the encoded value ranges for job title and location remained unchanged, 
 continuing to support the hypothesis that job-based factors carry significant salary signal.
+
+# Model Prediction
+## Model 1 Prediction 
+```{r}
+ctrl <- trainControl(method ="repeatedcv",
+                     number= 5, 
+                     repeats = 3)
+model1<- train(salary~ ., data= js.df, method="lm",trControl= ctrl)
+```
+
+
+## Model 2 Prediction 
+
+```{r}
+model2 <- train(salary ~ ., data=js.df, method = "rf", trControl= ctrl)
+```
+
+## Model Comparison
+```{r}
+Compared_result <- resamples(list(LinearModel= model1, RandomForest= model2 ))
+summary(Compared_result)
+```
 
 # References
 [1] https://www.kaggle.com/datasets/nalisha/job-salary-prediction-dataset
