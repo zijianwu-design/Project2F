@@ -77,9 +77,9 @@ js.df<- read.csv("job_salary_prediction_dataset.csv")
 
 In figure 1, the distribution of the outcome variable, salary, shows a mostly symmetrical shape that is mildly skewed to the right.
 
-```{r echo=FALSE, out.width="70%", out.height="35%", fig.align = 'center', fig.cap="Salary distribution."}
+```{r echo=FALSE, out.width="65%", out.height="28%", fig.align = 'center', fig.cap="Salary Density"}
 hist(js.df$salary/1000000, freq = FALSE, # freq = FALSE for density scale on y-axis
-     main = "", # turn off the title as using the fig.cap
+     main = "",
      xlab = "Salary (in millions)",
      ylab = "Density",
      ylim = c(0, 11)
@@ -106,18 +106,17 @@ kable(st.tbl, caption="Salary descriptive statistics")
 ```
 
 
-\newpage
 The distribution of the histogram is a uniform distribution with a non-obvious outlier at the low end 
-```{r echo=FALSE, out.width="70%", out.height="35%", fig.align = 'center', fig.cap="Experience Years."}
+```{r echo=FALSE, out.width="65%", out.height="28%", fig.align = 'center', fig.cap="Years of Experience"}
+
 hist(js.df$experience_years, 
      freq = FALSE, 
-     main = "Experience Year",
-     yaxt = 'n', # Hide the default axis
-     xlab = "Experience Year",
+     yaxt = 'n',
+     main = "",
+     xlab = "Years of Experience",
      ylab = "Percentage (%)",
      breaks = 20)
 
-# Create a custom axis that multiplies density by 100
 axis(2, at = seq(0, 0.1, by = 0.02), labels = seq(0, 10, by = 2))
 lines(density(js.df$experience_years), col = "blue", lwd = 2)
 ```
@@ -142,6 +141,34 @@ st.tbl <- cbind(statistic, value)
 kable(st.tbl, caption="Experience descriptive statistics")
 ```
 
+The table below illustrates the frequency and percentage of experience year. 
+```{r echo=FALSE, fig.cap="Years of Frequencies"}
+
+# 1. Generate the histogram object (without plotting it) 
+# using the exact same logic as your plot
+h <- hist(js.df$experience_years, breaks = 20, plot = FALSE)
+
+# 2. Extract the counts and calculate percentages
+# Note: Since your plot's Y-axis is density-based (0.1 = 10%), 
+# we calculate percentage relative to the total count.
+bin_counts <- h$counts
+bin_percentages <- round((bin_counts / sum(bin_counts)) * 100, 2)
+
+# 3. Create labels for the ranges (e.g., "0-1", "1-2")
+intervals <- paste0(head(h$breaks, -1), " - ", tail(h$breaks, -1))
+
+# 4. Combine into a summary table
+experience_summary <- data.frame(
+  Range = intervals,
+  Frequency = bin_counts,
+  Percentage = bin_percentages
+)
+
+kable(experience_summary, 
+      col.names = c("Experience Year Range", "Frequency", "Percentage (%)"),
+      caption = "Experience frequency and percentage (Binned).")
+```
+
 
 According to the data, the mean salary for entry-level positions is approximately $30,000 less than that of experienced roles. This observation is based solely on years of experience and does not account for variables such as job title
 ```{r echo=FALSE}
@@ -164,16 +191,16 @@ kable(comparison_table,
 ```
 
 
-\newpage
 The line plot demonstrates a positive correlation between years of experience and salary. This upward trend indicates that as professional experience increases, compensation levels tend to rise accordingly
 
-```{r echo=FALSE, out.width="70%", out.height="35%", fig.align='center', fig.cap="Average salary by years of experience."}
+```{r echo=FALSE, out.width="65%", out.height="28%", fig.align='center', fig.cap="Average salary by years of experience."}
 # Calculate means using aggregate
 summary_base <- aggregate(salary ~ experience_years, data = js.df, mean)
 
 # Plot
 plot(summary_base$experience_years, summary_base$salary, 
      type = "b", # "b" means both lines and points
+     main = "",
      col = "blue",
      xlab = "Experience", ylab = "Salary")
 ```
@@ -181,23 +208,21 @@ plot(summary_base$experience_years, summary_base$salary,
 
 \newpage
 The distribution of the Job Title is uniform distributed, nearly all of the job title has the similar percentage. 
-```{r echo=FALSE}
-# 1. Create a frequency table
+```{r echo=FALSE, fig.align="center", fig.cap="Job Title Distribution"}
 job_counts <- table(js.df$job_title)
 
-# 2. Convert to percentages
 job_percent <- prop.table(job_counts) * 100
 
-# 3. Sort (optional)
 job_percent <- sort(job_percent, decreasing = TRUE)
 
-# 4. Create the bar plot
+par(mar = c(10, 4, 2, 1))
+
 barplot(job_percent, 
-        main = "Job Title Distribution", 
-        ylab = "Frequency (%)",   # Labels the y-axis
+        main = "", 
+        ylab = "Frequency (%)",   
         col = "skyblue", 
         las = 2, 
-        cex.names = 0.7)
+        cex.names = 0.7, cex.axis =0.8)
 ```
 
 
@@ -286,6 +311,8 @@ kable(f.tbl, caption = "Overall F-test results for Model 1.")
 ```
 
 The F-test evaluates whether the model as a whole explains a statistically significant portion of the variation in salary. The result in Table 6 confirms that the predictors have a significant linear relationship with salary. Given the large sample size, this result is expected, with this many observations, even very small effects will produce a significant F-statistic. The adjusted R-squared of 0.9633 is therefore the more informative measure of practical model quality, indicating the model explains approximately 96.3% of the variance in salary.
+
+\newpage 
 
 To compare the relative importance of each predictor, we ranked them by the absolute value of their coefficient, which reflects the magnitude of their effect on salary.
 
@@ -388,7 +415,9 @@ ind.avg.tbl <- inspect.train.tbl %>%
 kable(ind.avg.tbl,
       caption = "Average actual salary, predicted salary, and encoded value by industry.")
 ```
-\newpage
+
+
+
 ### Evaluation of Model 1 Fit
 
 We checked for multicollinearity among the predictors by calculating the variance inflation factor (VIF) for each.
@@ -402,7 +431,6 @@ kable(vif.res, digits = 2,
 
 All VIF values are small, indicating no meaningful multicollinearity among the predictors.
 
-\newpage
 
 ```{r echo=FALSE, out.width="80%", out.height="35%", fig.align='center', fig.cap="Residuals vs. fitted values and Q-Q plot for Model 1."}
 par(mfrow = c(1, 2))
@@ -513,10 +541,9 @@ kable(comp.tbl, col.names = c("Model", "RMSE", "MAE"),
       caption = "Test-set prediction error comparison for Models 1 and 2.")
 ```
 
-Model 1 has a lower RMSE than Model 2, which is somewhat surprising given that random forests are generally more flexible. The likely explanation is each predictor contributes independently to salary, which is exactly the structure linear regression is designed for. The target encoding in Model 1 also gave the linear model an efficient way to capture the salary signal in high-cardinality categoricals, leveling the playing field. The random forest, trained on only 10% of the available data due to computational constraints, did not have access to the full signal that the linear model used.
+Model 1 has a lower RMSE than Model 2, which is somewhat surprising given that random forests are generally more flexible. The likely explanation is each predictor contributes independently to salary, which is exactly the structure linear regression is designed for. The target encoding in Model 1 also gave the linear model an efficient way to capture the salary signal in high-cardinality categoricals, leveling the playing field. It should be noted that this comparison is not fully fair. The random forest, trained on only 10% of the available data due to computational constraints, did not have access to the full signal that the linear model used.
 
-Both models agree that industry contributes almost no salary signal. Beyond 
-that, the models tell a somewhat different story. The linear regression showed the largest coefficient effects for company size and education level, while the encoded value tables revealed the broadest salary ranges for job title and location.
+Taking both models together, the hypothesis is partially supported: job title and location carry broad salary ranges, but experience years, company size, and education level are stronger predictors overall when non-linear effects are considered.
 
 ## Model Selection
 
@@ -561,7 +588,7 @@ coef.tbl2$Predictor <- gsub("company_sizeLarge",         "Company Size: Large vs
 coef.tbl2$Predictor <- gsub("company_sizeMedium",        "Company Size: Medium vs. Enterprise",  coef.tbl2$Predictor)
 coef.tbl2$Predictor <- gsub("company_sizeSmall",         "Company Size: Small vs. Enterprise",   coef.tbl2$Predictor)
 coef.tbl2$Predictor <- gsub("company_sizeStartup",       "Company Size: Startup vs. Enterprise", coef.tbl2$Predictor)
-coef.tbl2$Predictor <- gsub("experience_years",          "Experience Years",                     coef.tbl2$Predictor)
+coef.tbl2$Predictor <- gsub("experience_years",          "Years of Experience",                     coef.tbl2$Predictor)
 coef.tbl2$Predictor <- gsub("skills_count",              "Skills Count",                         coef.tbl2$Predictor)
 coef.tbl2$Predictor <- gsub("certifications",            "Certifications",                       coef.tbl2$Predictor)
 coef.tbl2$Predictor <- gsub("^job_title$",               "Job Title (target encoded)",           coef.tbl2$Predictor)
