@@ -517,6 +517,7 @@ kable(comp.tbl, col.names = c("Model", "RMSE", "MAE"),
 
 Model 1 has a lower RMSE than Model 2, which is somewhat surprising given that random forests are generally more flexible. The likely explanation is each predictor contributes independently to salary, which is exactly the structure linear regression is designed for. The target encoding in Model 1 also gave the linear model an efficient way to capture the salary signal in high-cardinality categoricals, leveling the playing field. It should be noted that this comparison is not fully fair. The random forest, trained on only 10% of the available data due to computational constraints, did not have access to the full signal that the linear model used.
 
+
 Taking both models together, the hypothesis is partially supported: job title and location carry broad salary ranges, but experience years, company size, and education level are stronger predictors overall when non-linear effects are considered.
 
 ## Model Selection
