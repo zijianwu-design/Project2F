@@ -591,49 +591,157 @@ the encoded value ranges for job title and location remained unchanged,
 continuing to support the hypothesis that job-based factors carry significant salary signal.
 
 # Model Prediction
+We are using repeated cross validation to3 do the model prediction. In this model, there are 10 folds repeated 3 times with 80% of the data used for training on each fold. The first model is linear regression, while another model is random forest. Due to the large amount of data, we are randomly select 10% of the sample for our analysis. 
+```{r echo = FALSE}
+small.sample <- train.data[sample(nrow(train.data), nrow(train.data) * 0.1), ]
+
+ctrl<- trainControl(method = "repeatedcv",
+                    number=10,
+                    repeats=3,p=0.8)
+
+```
+
+
+
+The two tables below shows the training results regarding Linear Regression and Random Forest model
+
 ## Model 1 Prediction 
-We are using repeated cross validation to do the model prediction. In this model, there are 10 folds repeated 3 times with 80% of the data used for training on each fold. The first model is linear regression, while another model is random forest. Due to the large amount of data, we are randomly select 10% of the sample for our analysis. 
-```{r}
-ctrl <- trainControl(method ="repeatedcv",
-                     number= 10, 
-                     repeats = 3,p=0.8)
-
+```{r echo =FALSE,comment=""}
 model1<- train(salary~ ., data= small.sample, method="lm",trControl= ctrl)
+
+model1_results <- model1$results
+
+kable(model1_results, digits = 2, caption = "Model 1 Training Results")
 ```
 
 
-```{r}
-# 1. View the average RMSE and other metrics
-print(model1$results)
-
-# 2. Extract specific values for your report
-mean_rmse1 <- model1$results$RMSE
-sd_rmse1 <- model1$results$RMSESD  # This is the Standard Deviation of the RMSE
-
-cat("The Mean RMSE is:", mean_rmse1, "\n")
-cat("The Standard Deviation of RMSE is:", sd_rmse1, "\n")
-```
 
 
 ## Model 2 Prediction 
 
-```{r}
+```{r echo = FALSE,warning=FALSE,message=FALSE,comment=""}
 model2 <- train(salary ~ ., data=small.sample, method = "ranger", trControl= ctrl, num_trees= 50, tuneLength=1)
+model2_results <- model2$results
+
+kable(model2_results, digits = 2, caption = "Model 2 Training Results")
 ```
 
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE,comment=""}
+pred1<- predict(model1, small.sample)
+ 
+pred2<- predict(model2, small.sample)
+ 
+prediction_results <- data.frame(
+
+Actual_Salary = small.sample$salary,
+ 
+Linear_Pred = pred1,
+ 
+RF_Pred = pred2
+ 
+)
+ 
+```
 
 
 ## Model Comparison
-```{r}
-pred1<- predict(model1, small.sample)
-pred2<- predict(model2, small.sample)
-prediction_results <- data.frame(
-  Actual_Salary = small.sample$salary,
-  Linear_Pred = pred1,
-  RF_Pred = pred2
-)
-print(head(prediction_results, 10))
+
+The table below shows the five-number summaries of RMSE in both models. It clearly illustrates that Random forest has a higher RMSE in comparison with Linear regression. 
+```{r echo=FALSE,warning=FALSE,message=FALSE,comment=""}
+# 1. You MUST define 'results' first!
+results <- resamples(list(Linear_Regression = model1, Random_Forest = model2))
+
+# 2. Now you can extract the statistics
+comparison_summary <- summary(results)$statistics$RMSE
+
+# 3. Convert to data frame
+comparison_table <- as.data.frame(comparison_summary)
+
+# 4. Display with kable
+knitr::kable(comparison_table[, 1:6], 
+             digits = 2, 
+             format.args = list(big.mark = ","),
+             caption = "Comparison of RMSE Distribution")
+
 ```
+
+
+
+The performance comparison highlights a significant advantage for the Linear Regression model. It achieved a substantially lower Mean RMSE compared to the Random Forest, indicating much higher predictive accuracy. Furthermore, the SD_RMSE and the five-number summary reveal that Linear Regression is more consistent; its maximum error is still considerably lower than the Random Forest's minimum error, proving it is the more stable model for this data set. 
+```{r echo= FALSE,warning=FALSE,message=FALSE,comment=""}
+
+# 1. Collect results
+results <- resamples(list(Linear_Regression = model1, Random_Forest = model2))
+
+# 2. Create the summary table
+model_comp <- data.frame(
+  Model = c("Linear Regression", "Random Forest"),
+  Mean_RMSE = c(mean(model1$resample$RMSE), mean(model2$resample$RMSE)),
+  SD_RMSE = c(sd(model1$resample$RMSE), sd(model2$resample$RMSE))
+)
+
+# 3. Display neatly
+knitr::kable(model_comp, 
+             digits = 2, 
+             format.args = list(big.mark = ","),
+             col.names = c("Model", "Mean RMSE (Accuracy)", "SD RMSE (Stability)"),
+             caption = "Final Performance Comparison")
+```
+
+
+
+
+
+The following table and plot visualize the predictive performance of both models compared to actual salaries. On the plot, both the Linear Regression and Random Forest models track the actual salary trends closely; however, the Linear model exhibits higher variance in certain regions, occasionally underestimating the actual values more significantly than the Random Forest. 
+```{r echo=FALSE,warning=FALSE,message=FALSE,comment=""}
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+# Add an ID column for the x-axis (Observation Index)
+prediction_results <- prediction_results %>%
+  mutate(obs_id = row_number())
+
+# Prepare data for plotting: pivot from wide to long format
+plot_data <- prediction_results %>%
+  pivot_longer(cols = c(Actual_Salary, Linear_Pred, RF_Pred), 
+               names_to = "Type", 
+               values_to = "Salary")
+```
+
+```{r echo=FALSE,out.width="65%", out.height="28%", fig.align='center', fig.cap="Salary Prediction Comparison",warning=FALSE,message=FALSE,comment=""}
+# Plotting the first 50 observations for clarity
+ggplot(plot_data %>% filter(obs_id <= 50), aes(x = obs_id, y = Salary, color = Type)) +
+  geom_line(aes(linetype = Type), size = 1) +
+  geom_point(size = 1.5) +
+  scale_color_manual(values = c("Actual_Salary" = "black", 
+                                "Linear_Pred" = "blue", 
+                                "RF_Pred" = "red")) +
+  labs(title = "Salary Prediction Comparison: Actual vs. Models",
+       subtitle = "First 50 observations from the 10% sample",
+       x = "Observation Index",
+       y = "Salary",
+       color = "Legend",
+       linetype = "Legend") +
+  theme_minimal()
+```
+
+Below is the first 10 observations comparison of actual salary and model predictions
+```{r echo=FALSE,warning=FALSE,message=FALSE,comment=""}
+library(knitr)
+
+# Simple table with comma formatting and 2 decimal places
+kable(head(prediction_results, 10), 
+      digits = 2, 
+      format.args = list(big.mark = ","),
+      caption = "Comparison of Actual vs. Predicted Salaries",
+      col.names = c("Row ID", "Actual Salary", "Linear Pred", "RF Pred", "Obs ID"))
+
+
+```
+
 
 # References
 [1] https://www.kaggle.com/datasets/nalisha/job-salary-prediction-dataset
