@@ -730,7 +730,7 @@ RF_Pred = pred2
 
 ## Model Comparison
 
-<<<<<<< HEAD
+
 The table below shows the five-number summaries of RMSE in both models. It clearly illustrates that Random forest has a higher RMSE in comparison with Linear regression. 
 ```{r echo=FALSE,warning=FALSE,message=FALSE,comment=""}
 # 1. You MUST define 'results' first!
@@ -749,7 +749,6 @@ knitr::kable(comparison_table[, 1:6],
              caption = "Comparison of RMSE Distribution")
 
 ```
-
 
 
 The performance comparison highlights a significant advantage for the Linear Regression model. It achieved a substantially lower Mean RMSE compared to the Random Forest, indicating much higher predictive accuracy. Furthermore, the SD_RMSE and the five-number summary reveal that Linear Regression is more consistent; its maximum error is still considerably lower than the Random Forest's minimum error, proving it is the more stable model for this data set. 
