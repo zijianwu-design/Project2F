@@ -270,6 +270,9 @@ adjrsq <- summary(lm.engine)$adj.r.squared
 cat(sprintf("The adjusted R-squared for this model was %.4f, meaning the model explains approximately %.1f%% of the variance in salary.",
             adjrsq, adjrsq * 100))
 ```
+
+
+
 ```{r echo=FALSE}
 overall.stats <- glance(extract_fit_engine(mod1.fit))
 
@@ -589,24 +592,47 @@ continuing to support the hypothesis that job-based factors carry significant sa
 
 # Model Prediction
 ## Model 1 Prediction 
+We are using repeated cross validation to do the model prediction. In this model, there are 10 folds repeated 3 times with 80% of the data used for training on each fold. The first model is linear regression, while another model is random forest. Due to the large amount of data, we are randomly select 10% of the sample for our analysis. 
 ```{r}
 ctrl <- trainControl(method ="repeatedcv",
-                     number= 5, 
-                     repeats = 3)
-model1<- train(salary~ ., data= js.df, method="lm",trControl= ctrl)
+                     number= 10, 
+                     repeats = 3,p=0.8)
+
+model1<- train(salary~ ., data= small.sample, method="lm",trControl= ctrl)
+```
+
+
+```{r}
+# 1. View the average RMSE and other metrics
+print(model1$results)
+
+# 2. Extract specific values for your report
+mean_rmse1 <- model1$results$RMSE
+sd_rmse1 <- model1$results$RMSESD  # This is the Standard Deviation of the RMSE
+
+cat("The Mean RMSE is:", mean_rmse1, "\n")
+cat("The Standard Deviation of RMSE is:", sd_rmse1, "\n")
 ```
 
 
 ## Model 2 Prediction 
 
 ```{r}
-model2 <- train(salary ~ ., data=js.df, method = "rf", trControl= ctrl)
+model2 <- train(salary ~ ., data=small.sample, method = "ranger", trControl= ctrl, num_trees= 50, tuneLength=1)
 ```
+
+
 
 ## Model Comparison
 ```{r}
-Compared_result <- resamples(list(LinearModel= model1, RandomForest= model2 ))
-summary(Compared_result)
+pred1<- predict(model1, small.sample)
+pred2<- predict(model2, small.sample)
+prediction_results <- data.frame(
+  Actual_Salary = small.sample$salary,
+  Linear_Pred = pred1,
+  RF_Pred = pred2
+)
+print(head(prediction_results, 10))
 ```
 
 # References
