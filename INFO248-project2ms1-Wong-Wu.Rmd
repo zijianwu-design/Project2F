@@ -591,7 +591,8 @@ the encoded value ranges for job title and location remained unchanged,
 continuing to support the hypothesis that job-based factors carry significant salary signal.
 
 # Model Prediction
-We are using repeated cross validation to3 do the model prediction. In this model, there are 10 folds repeated 3 times with 80% of the data used for training on each fold. The first model is linear regression, while another model is random forest. Due to the large amount of data, we are randomly select 10% of the sample for our analysis. 
+
+We are using repeated cross validation to do the model prediction. In this model, there are 10 folds repeated 3 times with 80% of the data used for training on each fold. The first model is linear regression, while another model is random forest. Due to the large amount of data, we are randomly select 10% of the sample for our analysis. 
 ```{r echo = FALSE}
 small.sample <- train.data[sample(nrow(train.data), nrow(train.data) * 0.1), ]
 
@@ -617,16 +618,97 @@ kable(model1_results, digits = 2, caption = "Model 1 Training Results")
 
 
 
+To evaluate how well each model generalizes to unseen data, we used repeated cross-validation with 10 folds repeated 3 times. In each fold the data is splt so that 80% of the data was used ofr training on each fold and the remaining 20% held out for testing This process produces 30 total evaluations, and the RMSE and standard deviation are averaged out across all folds to give a stable estimate of out-of-sample error.
+
+## Model 1 Prediction
+
+```{r echo=FALSE}
+RNGversion(r.version)
+set.seed(seed.val)
+
+cv.control <- trainControl(
+  method  = "repeatedcv",
+  number  = 10,
+  repeats = 3,
+  p  = 0.80
+)
+
+baked.train <- bake(prepped.rec2, new_data = train.data)
+
+lm.cv <- train(
+  salary ~ .,
+  data      = baked.train,
+  method    = "lm",
+  trControl = cv.control
+)
+
+lm.cv.tbl <- data.frame(
+  Model    = "Linear Regression",
+  Mean_RMSE = round(lm.cv$results$RMSE, 2),
+  SD_RMSE   = round(lm.cv$results$RMSESD, 2),
+  Mean_MAE  = round(lm.cv$results$MAE, 2),
+  Mean_Rsq  = round(lm.cv$results$Rsquared, 4)
+)
+
+kable(lm.cv.tbl,
+      col.names = c("Model", "Mean RMSE", "SD RMSE", "Mean MAE", "Mean R²"),
+      caption = "Repeated 10-fold CV results for the linear regression model.")
+```
+
+The linear regression model produced consistent RMSE values across all 30 folds, with a low standard deviation indicating stable generalization. The mean R-squared is consistent with the adjusted R-squared reported during model fitting, confirming the model is not overfitting to the training data.
+
 ## Model 2 Prediction 
 
+<<<<<<< HEAD
 ```{r echo = FALSE,warning=FALSE,message=FALSE,comment=""}
 model2 <- train(salary ~ ., data=small.sample, method = "ranger", trControl= ctrl, num_trees= 50, tuneLength=1)
 model2_results <- model2$results
 
 kable(model2_results, digits = 2, caption = "Model 2 Training Results")
+
+
+
 ```
 
 
+```{r echo=FALSE}
+RNGversion(r.version)
+set.seed(seed.val)
+
+small.baked <- baked.train[sample(nrow(baked.train), nrow(baked.train) * 0.1), ]
+
+rf.cv <- train(
+  salary ~ .,
+  data      = small.baked,
+  method    = "rf",
+  trControl = cv.control,
+  tuneGrid  = data.frame(mtry = 3),
+  ntree     = 500
+)
+
+rf.cv.tbl <- data.frame(
+  Model     = "Random Forest",
+  Mean_RMSE = round(rf.cv$results$RMSE, 2),
+  SD_RMSE   = round(rf.cv$results$RMSESD, 2),
+  Mean_MAE  = round(rf.cv$results$MAE, 2),
+  Mean_Rsq  = round(rf.cv$results$Rsquared, 4)
+)
+
+kable(rf.cv.tbl,
+      col.names = c("Model", "Mean RMSE", "SD RMSE", "Mean MAE", "Mean R²"),
+      caption = "Repeated 10-fold CV results for the random forest model.")
+```
+
+
+The random forest was evaluated on a 10% sample of the training data due to computational constraints. The mean RMSE is higher than the linear regression, and the larger standard deviation across folds reflects greater variability, likely a result of the reduced training sample rather than a fundamental weakness of the model.
+
+```{r echo=FALSE}
+cv.comp <- bind_rows(lm.cv.tbl, rf.cv.tbl)
+
+kable(cv.comp,
+      col.names = c("Model", "Mean RMSE", "SD RMSE", "Mean MAE", "Mean R²"),
+      caption = "Cross-validation performance comparison for both models.")
+```
 
 ```{r echo=FALSE,warning=FALSE,message=FALSE,comment=""}
 pred1<- predict(model1, small.sample)
@@ -648,6 +730,7 @@ RF_Pred = pred2
 
 ## Model Comparison
 
+<<<<<<< HEAD
 The table below shows the five-number summaries of RMSE in both models. It clearly illustrates that Random forest has a higher RMSE in comparison with Linear regression. 
 ```{r echo=FALSE,warning=FALSE,message=FALSE,comment=""}
 # 1. You MUST define 'results' first!
@@ -742,6 +825,32 @@ kable(head(prediction_results, 10),
 
 ```
 
+
+```{r echo=FALSE, out.width="70%", out.height="35%", fig.align='center', fig.cap="RMSE per fold across repeated CV for both models."}
+lm.fold.df <- data.frame(
+  Fold  = seq_along(lm.cv$resample$RMSE),
+  RMSE  = lm.cv$resample$RMSE,
+  Model = "Linear Regression"
+)
+
+rf.fold.df <- data.frame(
+  Fold  = seq_along(rf.cv$resample$RMSE),
+  RMSE  = rf.cv$resample$RMSE,
+  Model = "Random Forest"
+)
+
+fold.df <- bind_rows(lm.fold.df, rf.fold.df)
+
+ggplot(fold.df, aes(x = Fold, y = RMSE, color = Model, group = Model)) +
+  geom_line() +
+  geom_point(size = 1.5) +
+  labs(x = "Fold (10 folds × 3 repeats)",
+       y = "RMSE",
+       color = "Model") +
+  theme_minimal()
+```
+
+The line plot shows the RMSE across all 30 folds for both models. The linear regression line remains flat and consistent, confirming stable generalization across different subsets of the data. The random forest shows more inconsistent variation, consistent with the higher standard deviation reported in the table. Overall, the linear regression outperforms the random forest under cross-validation, which mirrors the test-set findings reported earlier.
 
 # References
 [1] https://www.kaggle.com/datasets/nalisha/job-salary-prediction-dataset
